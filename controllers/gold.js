@@ -3,9 +3,9 @@ const gold = require("../models/gold")
 const getPrice = async (req, res) => {
     const price = await updatePrice()
 
-    res.status(200).send({ 
-        price_22K: price.price_22K, 
-        price_24K: price.price_24K 
+    res.status(200).send({
+        price_22K: price.price_22K,
+        price_24K: price.price_24K
     })
 }
 

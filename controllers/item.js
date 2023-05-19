@@ -30,7 +30,15 @@ const createItem = async (req, res) => {
             all_price: all_price
         })
 
-        res.status(200).send(newItem)
+        const createdItem = {
+            id: newItem._id,
+            name: newItem.name,
+            price: newItem.currentPrice,
+            weight: newItem.weight,
+            all_price: newItem.all_price
+        }
+
+        res.status(201).send(createdItem)
     } catch (error) {
         res.status(400).send({ error })
     }
@@ -41,7 +49,8 @@ const updatedItems = async (req, res) => {
     try {
         const len = await updatePrices()
 
-        res.status(200).send({ message: `${len} items updated` })
+
+        res.status(200).send({ message: `${len} items modified` })
     } catch (error) {
         res.status(400).send({ error })
     }
@@ -106,32 +115,34 @@ const getItem = async (req, res) => {
 const updatePrices = async () => {
 
     // getting current gold price
-    const { data } = await axios.get('http://localhost:3000/gold/price');
+    const { data } = await axios.get('http://localhost:3000/gold/price')
     const price = data.price_22K
 
-    const items = await item.find()
+    try {
+        const result = await item.updateMany({}, [
+            {
+                $set: {
+                    price: { $multiply: [{ $divide: ['$weight', 10] }, price] },
+                    all_price: {
+                        $concatArrays: [
+                            '$all_price',
+                            [
+                                {
+                                    date: new Date(),
+                                    price: { $multiply: [{ $divide: ['$weight', 10] }, price] }
+                                }
+                            ]
+                        ]
+                    }
+                }
+            }
+        ]);
 
-    for (let index = 0; index < items.length; index++) {
-        const id = items[index]._id
+        return result.modifiedCount;
 
-        const currItem = await item.findById(id)
-
-        const newPrice = (currItem.weight / 10) * price
-
-        if (newPrice == currItem.price) continue
-
-        currItem.price = newPrice;
-
-        // adding new price to all_price array
-        currItem.all_price.push({
-            date: new Date(),
-            price: newPrice
-        })
-
-        await currItem.save()
+    } catch (error) {
+        return error
     }
-
-    return items.length
 }
 
 const getBestPrice = async (all_price, range) => {
