@@ -1,5 +1,5 @@
 
-# CRUD API
+# Brillante Jewels
 
 This is a Gold price tracking API created using Node.js to keep track of Gold prices daily and update the prices of gold items according to the price everyday.
 
